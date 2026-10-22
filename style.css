@@ -184,6 +184,16 @@ footer .logo span,.logo span{color:var(--glow)}
 body{margin:0}
 .hero.small{padding-bottom:48px}
 .hero.small .hero-body{margin-top:40px}
+.links .opt.home{display:inline}
+.hero.home{position:relative;overflow:hidden;isolation:isolate;min-height:min(92vh,800px);display:flex}
+.hero.home>.in{position:relative;z-index:2;display:flex;flex-direction:column;width:100%}
+.hero.home .hero-body{grid-template-columns:minmax(0,1fr);margin-top:auto;padding-top:clamp(48px,12vh,120px);padding-bottom:12px}
+.hero.home .lead{max-width:50ch}
+.hero-bg{position:absolute;inset:0;z-index:0;background:#0F1C30}
+.hero-bg .sl{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transform:scale(1.02);transition:opacity 1.8s ease,transform 10s linear}
+.hero-bg .sl.on{opacity:1;transform:scale(1.07)}
+.hero-bg::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,28,48,.6) 0%,rgba(15,28,48,.3) 38%,rgba(15,28,48,.88) 100%)}
+@media (prefers-reduced-motion:reduce){.hero-bg .sl{transition:none;transform:none}.hero-bg .sl.on{transform:none}}
 .nav .links a.cur{text-decoration:underline;text-underline-offset:4px;opacity:1}
 .niches{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
 a.tile{text-decoration:none}

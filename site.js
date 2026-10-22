@@ -16,6 +16,8 @@ var $=function(s){return document.querySelector(s)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]})}
 function safeUrl(u){u=String(u==null?'':u).trim();return /^https?:\/\//i.test(u)?u:(/^[\w\-\/.]+\.(jpe?g|png|webp|gif|mp4|webm|avif)$/i.test(u)?u:'')}
 function safeLink(u){u=String(u==null?'':u).trim();return /^https?:\/\//i.test(u)?u:'#'}
+function waNum(v){var d=String(v||'').replace(/\D/g,'');return d.length<=11?'55'+d:d}
+function waFmt(v){var d=String(v||'').replace(/\D/g,'').replace(/^55(?=\d{10,11}$)/,'');return d.length===11?'('+d.slice(0,2)+') '+d.slice(2,7)+'-'+d.slice(7):d.length===10?'('+d.slice(0,2)+') '+d.slice(2,6)+'-'+d.slice(6):String(v)}
 function pad(n){return String(n).padStart(2,'0')}
 function ymd(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
 
@@ -34,7 +36,7 @@ function renderVideos(box,tipo,g){
 (function contacts(){
   var box=$('#ct');if(!box)return;
   var rows=[];
-  if(CONFIG.whatsapp)rows.push(['WhatsApp','<a href="https://wa.me/'+esc(CONFIG.whatsapp.replace(/\D/g,''))+'" target="_blank" rel="noopener">'+esc(CONFIG.whatsapp)+'</a>']);
+  if(CONFIG.whatsapp)rows.push(['WhatsApp','<a href="https://wa.me/'+esc(waNum(CONFIG.whatsapp))+'" target="_blank" rel="noopener">'+esc(waFmt(CONFIG.whatsapp))+'</a>']);
   if(CONFIG.instagram)rows.push(['Instagram','<a href="https://instagram.com/'+encodeURIComponent(CONFIG.instagram.replace('@',''))+'" target="_blank" rel="noopener">@'+esc(CONFIG.instagram.replace('@',''))+'</a>']);
   if(CONFIG.email)rows.push(['E-mail','<span>'+esc(CONFIG.email)+'</span>']);
   if(CONFIG.cidade)rows.push(['Atendimento','<span>'+esc(CONFIG.cidade)+'</span>']);
@@ -54,7 +56,7 @@ function renderVideos(box,tipo,g){
       '\nEvento: '+$('#q-tipo').value+'\nCobertura: '+$('#q-cob').value+'\nData prevista: '+ds+'\nLocal: '+(v('#q-local')||'a combinar')+(v('#q-msg')?'\n\nDetalhes: '+v('#q-msg'):'');
     $('#q-text').textContent=msg;$('#q-out').hidden=false;
     var wa=$('#q-wa');
-    if(CONFIG.whatsapp){wa.href='https://wa.me/'+CONFIG.whatsapp.replace(/\D/g,'')+'?text='+encodeURIComponent(msg);wa.hidden=false;$('#q-hint').textContent='Escolha WhatsApp ou e-mail para abrir a conversa com a mensagem pronta. Se nada abrir, use Copiar mensagem.'}
+    if(CONFIG.whatsapp){wa.href='https://wa.me/'+waNum(CONFIG.whatsapp)+'?text='+encodeURIComponent(msg);wa.hidden=false;$('#q-hint').textContent='Escolha WhatsApp ou e-mail para abrir a conversa com a mensagem pronta. Se nada abrir, use Copiar mensagem.'}
     else{wa.hidden=true;$('#q-hint').textContent='Copie a mensagem e envie para mim pelo canal de contato que preferir.'}
     var ml=$('#q-mail');if(CONFIG.email){ml.href='mailto:'+CONFIG.email+'?subject='+encodeURIComponent('Pedido de orçamento - '+$('#q-tipo').value)+'&body='+encodeURIComponent(msg);ml.hidden=false}
     $('#q-out').scrollIntoView({block:'nearest',behavior:'smooth'});
@@ -71,6 +73,17 @@ function renderVideos(box,tipo,g){
 })();
 
 if(document.body.getAttribute("data-page")==="home"){(function(){
+(function hero(){
+  var box=$('#hbg');if(!box)return;
+  var imgs=(typeof HERO!=='undefined'&&HERO||[]).map(function(h){return safeUrl(h&&h.src)}).filter(Boolean);
+  var grads=['linear-gradient(135deg,#2D4F80,#14233D)','linear-gradient(135deg,#566B88,#1B2A44)','linear-gradient(135deg,#6E6254,#1F2A3C)','linear-gradient(135deg,#3C607A,#101C2E)'];
+  var els=(imgs.length?imgs:grads).map(function(v,i){var d=document.createElement('div');d.className='sl';
+    if(imgs.length)d.style.backgroundImage='url("'+v.replace(/"/g,'%22')+'")';else d.style.background=v;box.appendChild(d);return d});
+  var cur=0;els[0].classList.add('on');
+  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(els.length<2||reduce)return;
+  setInterval(function(){if(document.hidden)return;els[cur].classList.remove('on');cur=(cur+1)%els.length;els[cur].classList.add('on')},6500);
+})();
 var PACKAGES=[
   {nome:'Ensaios',de:null,ate:null,itens:['Sessão ao ar livre em local combinado','Individual, casal ou família','Fotos tratadas para entrega']},
   {nome:'Festas e eventos',de:null,ate:null,itens:['Infantil, 15 anos, aniversário ou corporativo','Cobertura no período combinado','Fotos tratadas para entrega']},
