@@ -33,6 +33,31 @@ function renderVideos(box,tipo,g){
   }).join('');
 }
 
+(function gcalProxy(){
+  var g=CONFIG.gcal;if(!g||!g.endpoint||!/^\/[\w\-\/]*$/.test(g.endpoint))return;
+  fetch(g.endpoint,{credentials:'omit'}).then(function(r){if(!r.ok)throw new Error(r.status);return r.json()}).then(function(j){
+    (j&&j.booked||[]).forEach(function(k){if(/^\d{4}-\d{2}-\d{2}$/.test(k)&&BOOKED.indexOf(k)<0)BOOKED.push(k)});
+    document.dispatchEvent(new Event('booked'));
+  }).catch(function(){/* sem conexão com a agenda: o calendário continua com as datas manuais */});
+})();
+(function gcal(){
+  var g=CONFIG.gcal;if(!g||!g.calendarId||!g.apiKey)return;
+  var t0=new Date(),from=new Date(t0.getFullYear(),t0.getMonth(),1),to=new Date(t0.getFullYear(),t0.getMonth()+12,1);
+  var url='https://www.googleapis.com/calendar/v3/calendars/'+encodeURIComponent(g.calendarId)+'/events?singleEvents=true&orderBy=startTime&maxResults=2500&fields=items(start,end,status,transparency)'+
+    '&timeMin='+encodeURIComponent(from.toISOString())+'&timeMax='+encodeURIComponent(to.toISOString())+'&key='+encodeURIComponent(g.apiKey);
+  fetch(url).then(function(r){if(!r.ok)throw new Error(r.status);return r.json()}).then(function(j){
+    (j.items||[]).forEach(function(ev){
+      if(ev.status==='cancelled'||!ev.start||ev.transparency==='transparent')return;
+      var s=ev.start.date?new Date(ev.start.date+'T00:00:00'):new Date(ev.start.dateTime);
+      var e=ev.end?(ev.end.date?new Date(ev.end.date+'T00:00:00'):new Date(ev.end.dateTime)):s;
+      if(isNaN(s)||isNaN(e))return;
+      var d=new Date(s.getFullYear(),s.getMonth(),s.getDate()),last=e>s?new Date(e.getTime()-1):s;
+      for(var n=0;d<=last&&n<400;n++){var k=ymd(d);if(BOOKED.indexOf(k)<0)BOOKED.push(k);d.setDate(d.getDate()+1)}
+    });
+    document.dispatchEvent(new Event('booked'));
+  }).catch(function(){/* sem conexão com a agenda: o calendário continua com as datas manuais */});
+})();
+
 (function contacts(){
   var box=$('#ct');if(!box)return;
   var rows=[];
@@ -131,22 +156,7 @@ $('#cal').addEventListener('click',function(e){
 });
 $('#q-data').addEventListener('change',function(e){var k=e.target.value;if(!k||BOOKED.indexOf(k)>=0)return;var p=k.split('-');view=new Date(+p[0],+p[1]-1,1);setDate(k)});
 renderCal();
-(function gcal(){
-  var g=CONFIG.gcal;if(!g||!g.calendarId||!g.apiKey)return;
-  var from=new Date(today.getFullYear(),today.getMonth(),1),to=new Date(today.getFullYear(),today.getMonth()+12,1);
-  var url='https://www.googleapis.com/calendar/v3/calendars/'+encodeURIComponent(g.calendarId)+'/events?singleEvents=true&orderBy=startTime&maxResults=2500&fields=items(start,end,status),nextPageToken'+
-    '&timeMin='+encodeURIComponent(from.toISOString())+'&timeMax='+encodeURIComponent(to.toISOString())+'&key='+encodeURIComponent(g.apiKey);
-  fetch(url).then(function(r){if(!r.ok)throw new Error(r.status);return r.json()}).then(function(j){
-    (j.items||[]).forEach(function(ev){
-      if(ev.status==='cancelled'||!ev.start)return;
-      var s=ev.start.date?new Date(ev.start.date+'T00:00:00'):new Date(ev.start.dateTime);
-      var e=ev.end?(ev.end.date?new Date(ev.end.date+'T00:00:00'):new Date(ev.end.dateTime)):s;
-      var d=new Date(s.getFullYear(),s.getMonth(),s.getDate()),last=ev.end&&ev.end.date?new Date(e.getTime()-1):e;
-      for(var n=0;d<=last&&n<400;n++){var k=ymd(d);if(BOOKED.indexOf(k)<0)BOOKED.push(k);d.setDate(d.getDate()+1)}
-    });
-    renderCal();
-  }).catch(function(){/* sem conexão com a agenda: o calendário continua com as datas manuais */});
-})();
+document.addEventListener('booked',renderCal);
 })()}else{(function(){
 var NICHO=JSON.parse(document.body.getAttribute("data-nicho"));
 (function gallery(){
