@@ -35,7 +35,7 @@ function renderVideos(box,tipo,g){
 
 (function gcalProxy(){
   var g=CONFIG.gcal;if(!g||!g.endpoint||!/^\/[\w\-\/]*$/.test(g.endpoint))return;
-  fetch(g.endpoint,{credentials:'omit'}).then(function(r){if(!r.ok)throw new Error(r.status);return r.json()}).then(function(j){
+  fetch(g.endpoint).then(function(r){if(!r.ok)throw new Error(r.status);return r.json()}).then(function(j){
     (j&&j.booked||[]).forEach(function(k){if(/^\d{4}-\d{2}-\d{2}$/.test(k)&&BOOKED.indexOf(k)<0)BOOKED.push(k)});
     document.dispatchEvent(new Event('booked'));
   }).catch(function(){/* sem conexão com a agenda: o calendário continua com as datas manuais */});
